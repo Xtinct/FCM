@@ -3,11 +3,15 @@ module Fcm
   generateRandomMatrix,
   generateVector,
   generateMembershipMatrix,
-  normalize
+  normalize,
+  calcCenters
 ) where
 
 import System.Random
 import Data.List.Split.Internals
+import MathUtils
+import Data.List
+
 
 normalize :: Int -> [[Float]] -> [[Float]]
 normalize cs xs = map normalize' xs
@@ -27,3 +31,10 @@ generateRandomMatrix gen cs vs = chunksOf cs $ generateVector gen size
 -- taking range of (0.1..1) instead of (0..1) to prevent negative numbers
 generateVector :: StdGen -> Int -> [Float]
 generateVector gen vs = take vs $ randomRs (0.1,1) gen :: [Float]
+
+calcCenters :: [[Float]] -> [[Float]] -> [[Float]]
+calcCenters xs ws = map (fraction xs) $ transpose ws
+  where
+    fraction xs ws = multVectorByValue  (summate xs ws) $ (rollFraction . sum $ map (^fuzziness) ws)
+    summate xs ws = vectorsSum $ zipWith ( \weight vector -> multVectorByValue vector (weight^fuzziness) ) ws xs
+    fuzziness = 1
