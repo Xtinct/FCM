@@ -2,15 +2,17 @@ module MathUtils
 (
   hammingDistance,
   euclideanDistance,
-  rollFraction,
+  invertedMultiply,
   multVectorByValue,
-  vectorsSum
+  vectorsSum,
+  matrixMaximum,
+  diff
 ) where
 
 import Data.List
 
-rollFraction :: (Fractional a) => a -> a
-rollFraction = (/) 1
+invertedMultiply :: (Fractional a) => a -> a
+invertedMultiply = (/) 1
 
 vectorsSum :: Num a => [[a]] -> [a]
 vectorsSum = foldl1' (zipWith (+))
@@ -24,3 +26,8 @@ hammingDistance x y = sqrt . sum . map (abs) $ zipWith (-) x y
 euclideanDistance :: (Floating a) => [a] -> [a] -> a
 euclideanDistance x y = sqrt . sum . map (^2) $ zipWith (-) x y
 
+diff :: (Num a) => [[a]] -> [[a]] -> [[a]]
+diff = zipWith (zipWith (-))
+
+matrixMaximum :: (Num a, Ord a) => [[a]] -> a
+matrixMaximum = maximum . map (maximum)
