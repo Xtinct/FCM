@@ -1,3 +1,5 @@
+{-# LANGUAGE DeriveDataTypeable #-}
+
 module Fcm
 (
   normalize,
@@ -7,18 +9,28 @@ module Fcm
   calcCenters,
   separate,
   separate',
-  calcWeights
+  calcWeights,
+  Distance(..)
 ) where
 
 import System.Random
 import Data.List.Split.Internals
 import MathUtils
 import Data.List
+import Data.Data
+import Data.Typeable
+
+data Distance = Hamming | Euclidean
+  deriving(Eq, Show, Read, Data)
+
+--instance Read Distance where
+--  readsPrec "hamming" = Hamming
+--  readsPrec "euclidean" = Euclidean
 
 
 normalize :: Int -> [[Float]] -> [[Float]]
 normalize cs xs = map normalize' xs
-  where 
+  where
     normalize' xs = sub (equate xs) xs
     sub s xs = map (subtract s) xs
     equate x = (sum x - 1) / fromIntegral cs
@@ -28,7 +40,7 @@ generateMembershipMatrix g cs vs = normalize cs $ generateRandomMatrix g cs vs
 
 generateRandomMatrix :: StdGen -> Int -> Int -> [[Float]]
 generateRandomMatrix gen cs vs = chunksOf cs $ generateVector gen size
-  where 
+  where
     size = cs*vs
 
 generateVector :: StdGen -> Int -> [Float]
@@ -53,10 +65,12 @@ separate' d fuzziness ws threshold xs =
     otherwise -> ws'
   where ws' = calcWeights fuzziness d xs $ calcCenters fuzziness xs ws
 
-separate :: Int -> Int -> Float -> [[Float]] -> [[Float]]
-separate _ _ _ [[]] = []
-separate nc fuzziness threshold xs =
-  separate' hammingDistance fuzziness startMatrix threshold xs
+separate :: Distance -> Int -> Int -> Float -> [[Float]] -> [[Float]]
+separate _ _ _ _ [[]] = []
+separate df nc fuzziness threshold xs =
+  case df of
+    Hamming -> separate' hammingDistance fuzziness startMatrix threshold xs
+    Euclidean -> separate' euclideanDistance fuzziness startMatrix threshold xs
   where
     nv = length xs
     startMatrix = generateMembershipMatrix (mkStdGen 0) nc nv
